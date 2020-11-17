@@ -1,6 +1,6 @@
 # Portfolio App
 
-This is a Portfolio project using the NextJS framework. In this project, I will showcase my development skills & knowledge in a wide variety of areas like ES6, React Hooks, cloud computing platforms, and APIs.
+This is a Portfolio project using the NextJS framework. In this project, I will showcase my development skills & knowledge in a wide variety of areas like ES6, React Hooks, cloud computing platforms, and APIs.
 
 
 ## Getting Started
