@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head'
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
-import { db } from '../config/firebase'
+import { fbDb } from '../config/firebase'
 import Link from 'next/link'
-import { blog } from '../config/CONSTANTS';
+import { blogCol } from '../config/CONSTANTS';
 
 const Home = () => {
-
   const [blogs, setBlogs] = useState([]);
   useEffect(() => {
-    db.collection(blog)
+    fbDb.collection(blogCol)
       .onSnapshot(snap => {
         const blogs = snap.docs.map(doc => ({
           id: doc.id,
@@ -40,7 +39,7 @@ const Home = () => {
         <ul className={utilStyles.list}>
           {blogs.map(blog =>
             <li className={utilStyles.listItem} key={blog.id}>
-              <Link href={`/blog/${blog.id}`}>
+              <Link href={`/${blogCol}/${blog.id}`}>
                 <a>{blog.title}</a>
               </Link>
             </li>

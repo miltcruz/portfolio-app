@@ -22,7 +22,7 @@ try {
 }
 
  // Auth
- export const auth = firebase.auth();
+ export const fbAuth = firebase.auth();
 
  // Firestore
- export const db = firebase.firestore();
+ export const fbDb = firebase.firestore();

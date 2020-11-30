@@ -1,15 +1,19 @@
+import Layout from '../../components/layout'
+import Head from 'next/head'
+import utilStyles from '../../styles/utils.module.css'
 import React, { useState } from 'react'
-import { db } from '../../config/firebase'
-import { blog } from '../../config/CONSTANTS'
+import { fbDb } from '../../config/firebase'
+import { blogCol } from '../../config/CONSTANTS'
 
 
-const CreatePost = () => {
+const Create = () => {
+    const pageTitle = 'Add Blog'
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [notification, setNotification] = useState('');
     const handleSubmit = (event) => {
         event.preventDefault();
-        db.collection(blog)
+        fbDb.collection(blogCol)
             .add({
                 title: title,
                 content: content,
@@ -20,34 +24,36 @@ const CreatePost = () => {
             setNotification('')
         }, 2000)
     }
+
     return (
         <Layout>
             <Head>
-                <title>{props.title}</title>
+                <title>{pageTitle}</title>
             </Head>
-            <article>
+            <section className={utilStyles.headingMd}>
                 <h1 className={utilStyles.headingLg}>
-                    Add Blog
+                    {pageTitle}
                 </h1>
                 <p>
                     {notification}
                 </p>
                 <form onSubmit={handleSubmit}>
                     <div>
-                        Title<br />
+                        Title <br />
                         <input type="text" value={title}
                             onChange={({ target }) => setTitle(target.value)} />
                     </div>
                     <div>
-                        Content<br />
+                        Content <br />
                         <textarea value={content}
                             onChange={({ target }) => setContent(target.value)} />
                     </div>
+                    <br />
                     <button type="submit">Save</button>
                 </form>
-            </article>
+            </section>
         </Layout>
     )
 }
 
-export default CreatePost;
+export default Create;
