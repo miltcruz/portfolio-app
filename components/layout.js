@@ -57,10 +57,10 @@ export default function Layout({ children, home }) {
       <div className={styles.backToHome}>
         {home && (
           <div>
-            <Link href="/users/login">
-              <a>Log in to contribute</a>
-            </Link> | <Link href="/users/register">
-              <a>Register for an account</a>
+            <Link href="/account/login">
+              <a>Log in</a>
+            </Link> | <Link href="/account/register">
+              <a>Register</a>
             </Link>
           </div>
         )}

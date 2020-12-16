@@ -2,36 +2,39 @@ import Layout from '../../components/layout'
 import Head from 'next/head'
 import utilStyles from '../../styles/utils.module.css'
 import { useState } from 'react'
-import { fbAuth } from '../../config/firebase'
+import { fbAuth, fbDb, usersCol } from '../../lib/firebase'
 import { useRouter } from 'next/router'
 
-const Register = () => {
-    const pageTitle = 'Create account'
-    const router = useRouter(); 
+const Login = () => {
+    const pageTitle = 'Login';
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
-    const [passConf, setPassConf] = useState('');
     const [notification, setNotification] = useState('');
-    const handleRegistration = (e) => {
+    const router = useRouter();
+    const handleLogin = (e) => {
         e.preventDefault();
-        if (password !== passConf) {
-            setNotification(
-                'Password and password confirmation does not match'
-            )
-            setTimeout(() => {
-                setNotification('')
-            }, 2000)
-            setPassword('');
-            setPassConf('');
-            return null;
-        }
 
-        fbAuth.createUserWithEmailAndPassword(username, password)
+        fbAuth.signInWithEmailAndPassword(username, password)
+            .then((userCred) => {
+
+                if (userCred.user.emailVerified === false) {
+                    setNotification('Please verify your email address.');
+                    setPassword('');
+
+                    return null;
+                }
+
+                //set default user data
+                fbDb.doc(`/${usersCol}/${userCred.user.uid}`)
+                    .update({ lastLogin: new Date() });
+                setUsername('');
+                setPassword('');
+                router.push("/account/dashboard");
+            })
             .catch((err) => {
-                console.log(err.code, err.message)
-            });
-
-        router.push("/")
+                console.log(err.code, err.message);
+                setNotification(err.message);
+            })
     }
 
     return (
@@ -46,7 +49,7 @@ const Register = () => {
                 <p>
                     {notification}
                 </p>
-                <form onSubmit={handleRegistration}>
+                <form onSubmit={handleLogin}>
                     <div>
                         Email <br />
                         <input type="text" value={username}
@@ -57,17 +60,12 @@ const Register = () => {
                         <input type="password" value={password}
                             onChange={({ target }) => setPassword(target.value)} />
                     </div>
-                    <div>
-                        Confirm Password <br />
-                        <input type="password" value={passConf}
-                            onChange={({ target }) => setPassConf(target.value)} />
-                    </div>
                     <br />
-                    <button type="submit">Register</button>
+                    <button type="submit">Login</button>
                 </form>
             </section>
         </Layout>
     )
 }
 
-export default Register
+export default Login

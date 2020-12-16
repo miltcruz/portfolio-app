@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import Head from 'next/head'
 import Layout, { siteTitle } from '../components/layout'
 import utilStyles from '../styles/utils.module.css'
-import { fbDb } from '../config/firebase'
+import { blogCol, fbDb } from '../lib/firebase'
 import Link from 'next/link'
-import { blogCol } from '../config/CONSTANTS';
+
 
 const Home = () => {
   const [blogs, setBlogs] = useState([]);
+  
   useEffect(() => {
     fbDb.collection(blogCol)
       .onSnapshot(snap => {

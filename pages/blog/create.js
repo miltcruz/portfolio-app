@@ -2,8 +2,8 @@ import Layout from '../../components/layout'
 import Head from 'next/head'
 import utilStyles from '../../styles/utils.module.css'
 import React, { useState } from 'react'
-import { fbDb } from '../../config/firebase'
-import { blogCol } from '../../config/CONSTANTS'
+import { fbDb } from '../../lib/firebase'
+import { blogCol } from '../../lib/CONSTANTS'
 
 
 const Create = () => {
