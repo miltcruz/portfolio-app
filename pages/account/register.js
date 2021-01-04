@@ -33,7 +33,11 @@ const Register = () => {
                 userCred.user.updateProfile({ displayName });
                 //set default user data
                 fbDb.doc(`/${usersCol}/${userCred.user.uid}`)
-                    .set({ lastLogin: new Date() }, { merge: true });
+                    .set({ 
+                        lastLogin: new Date(),
+                        companies: ['6JGjgEhbc7BX05q7kiHH'],
+                        surverys: ['C0m7XOX3c40sp280Utyn', '0TnybmCgweLxJtrC1SY6']
+                    }, { merge: true });
 
                 router.push("/");
             })
