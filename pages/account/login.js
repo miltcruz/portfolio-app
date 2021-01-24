@@ -2,7 +2,7 @@ import Layout from '../../components/layout'
 import Head from 'next/head'
 import utilStyles from '../../styles/utils.module.css'
 import { useState } from 'react'
-import { fbAuth, fbDb, usersCol } from '../../lib/firebase'
+import { fbAuth, fbDb, USER_COL } from '../../lib/firebase'
 import { useRouter } from 'next/router'
 
 const Login = () => {
@@ -25,7 +25,7 @@ const Login = () => {
                 }
 
                 //set default user data
-                fbDb.doc(`/${usersCol}/${userCred.user.uid}`)
+                fbDb.doc(`/${USER_COL}/${userCred.user.uid}`)
                     .update({ lastLogin: new Date() });
                 setUsername('');
                 setPassword('');

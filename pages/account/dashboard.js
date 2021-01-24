@@ -5,27 +5,38 @@ import utilStyles from '../../styles/utils.module.css'
 import { useEffect, useState } from 'react'
 import { fbAuth } from '../../lib/firebase'
 import { useRouter } from 'next/router'
+import Date from '../../components/date'
+import Link from 'next/link'
 
 const Dashboard = () => {
     const pageTitle = 'Dashboard';
     const [notification, setNotification] = useState('');
-    const [companies, setcompanies] = useState([]);
+    const [companies, setCompanies] = useState([]);
+    const [surveys, setSurveys] = useState([]);
     const router = useRouter();
-    const url = 'http://localhost:5000/portfolio-app-2868c/us-central1/getCompanies'
+    const url = 'http://localhost:5000/portfolio-app-2868c/us-central1/getDashboard'
     const user = fbAuth.currentUser;
-    useEffect(() => {
+    useEffect(async () => {
         if (user) {
-            axios({
+
+            await axios({
                 url,
                 method: 'get',
+                heading: {
+                    'Access-Control-Allow-Origin': 'http://localhost:3000'
+                },
                 params: {
-                    uid: user.ui
+                    uid: user.uid
                 }
             })
                 .then((data) => {
-                    console.log('data', data)
-                }).catch((err) => {
-                    console.log('err', err)
+                    console.log(data.data);
+                    const { companies, surveys } = data.data
+                    setCompanies(companies)
+                    setSurveys(surveys)
+                })
+                .catch((err) => {
+                    setNotification(err.toString())
                 })
         }
         else {
@@ -48,11 +59,27 @@ const Dashboard = () => {
                 </p>
             </section>
             <section className={`${utilStyles.headingMd} ${utilStyles.padding1px}`}>
-                <h2 className={utilStyles.headingLg}>Blog</h2>
+                <h2 className={utilStyles.headingLg}>Company</h2>
                 <ul className={utilStyles.list}>
                     {companies.map(company =>
                         <li className={utilStyles.listItem} key={company.id}>
                             {company.name}
+                            <br />
+                            <small className={utilStyles.lightText}>
+                                Established Date: <Date dateString={company.dateEst} />
+                            </small>
+                        </li>
+                    )}
+                </ul>
+            </section>
+            <section className={`${utilStyles.headingMd} ${utilStyles.padding1px}`}>
+                <h2 className={utilStyles.headingLg}>Surveys</h2>
+                <ul className={utilStyles.list}>
+                    {surveys.map(survey =>
+                        <li className={utilStyles.listItem} key={survey.id}>
+                            <Link href={`/survey/${survey.id}`}>
+                                <a>{survey.title}</a>
+                            </Link>
                         </li>
                     )}
                 </ul>
