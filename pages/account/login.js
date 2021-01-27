@@ -29,7 +29,7 @@ const Login = () => {
                     .update({ lastLogin: new Date() });
                 setUsername('');
                 setPassword('');
-                router.push("/account/dashboard");
+                router.push(`/account/${userCred.user.uid}`);
             })
             .catch((err) => {
                 console.log(err.code, err.message);

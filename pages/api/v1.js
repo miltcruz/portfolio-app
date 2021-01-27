@@ -1,106 +1,147 @@
 const { https } = require('firebase-functions');
 const admin = require('firebase-admin');
+const express = require('express');
+const cors = require('cors');
+const serviceAccount = require('../../permissions.json');
+const { response } = require('express');
 
-const app = admin.initializeApp();
-const firestore = app.firestore();
-const ALLOWED_ORIGINS = [
-    'http://localhost:8888',
-    'http://localhost:3000'
-];
+// init app
+const app = express();
+app.use(cors({ origin: true }))
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
 
-let headers;
-
-exports.getDashboard = https.onRequest(async (req, res) => {
-
-    // get user id
-    const userId = req.query.uid;
-    const origin = req.headers.origin;
-    if (ALLOWED_ORIGINS.includes(origin)) {
-        headers = {
-            'Access-Control-Allow-Origin': origin,
-            'Access-Control-Allow-Credentials': true,
-            "Content-Type": "application/json"
-        }
-
-    } else {
-        headers = {
-            'Access-Control-Allow-Origin': '*',
-            "Content-Type": "application/json"
-        }
-    }
-    // set appropriate header
-    res.set(headers);
-
-    if (userId) {
-
-        const userDoc = await firestore
-            .doc(`users/${userId}`)
-            .get();
-
-        const userData = userDoc.data();
-
-        if (userData) {
-            const companies = await getCompanies(userData.companies);
-            const surveys = await getSurveys(userData.surveys);
-
-            res.send({
-                companies,
-                surveys
-            });
-        }
-
-        return;
-    }
-
-    res.send('No user Id (uid) found.');
+// init firebase
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    //databaseURL: "https://portfolio-app-2868c.firebaseio.com"
 })
 
-const getCompanies = async (companies) => {
-    const fetchPromises = [];
-    companies.forEach((companyId) => {
-        const nextPromise = firestore
-            .doc(`companies/${companyId}`)
-            .get();
+// init database
+const db = admin.firestore()
 
-        fetchPromises.push(nextPromise);
-    });
+// GET surveys
+app.get('/v1/surveys', (req, res) => {
+    (async () => {
+        try {
+            let response = []
+            await db.collection('surveys')
+                .get()
+                .then(snapshot => {
+                    const docs = snapshot.docs;
+                    docs.forEach((doc) => {
+                        const { dateTaken, title, ...survey } = doc.data();
+                        const item = {
+                            id: doc.id,
+                            title,
+                            survey,
+                            dateTaken: (dateTaken) ? dateTaken.toDate() : dateTaken
+                        }
+                        response.push(item)
+                    })
+                })
+            return res.status(200).send(response)
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json(error)
+        }
+    })()
+})
 
-    const snapshots = await Promise.all(fetchPromises);
+// GET survey by id
+app.get('/v1/survey/:id', (req, res) => {
+    (async () => {
+        try {
+            const item = await db.collection('surveys')
+                .doc(req.params.id)
+                .get()
+            const { dateTaken, title, response } = item.data()
+            return res.status(200).send({
+                id: item.id,
+                title,
+                response,
+                dateTaken: (dateTaken) ? dateTaken.toDate() : dateTaken,
+            });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json(error)
+        }
+    })()
+})
+
+// GET dashboard by user id
+app.get('/v1/dashboard/:uid', (req, res) => {
+    (async () => {
+        try {
+            // get user id
+            const uid = req.params.uid;
+            if (uid) {
+                const item = await db.collection('users')
+                    .doc(uid)
+                    .get()
+                const data = item.data()
+                if (data) {
+                    const companies = await getCompanies(data.companies);
+                    const surveys = await getSurveys(data.surveys);
+
+                    return res.status(200).send({
+                        companies,
+                        surveys
+                    });
+                }
+            }
+            return res.status(400).json({ error: 'Provide valid user id (UID).' });
+        } catch (error) {
+            console.log(error);
+            return res.status(500).json({ error: error })
+        }
+    })()
+})
+
+exports.api = https.onRequest(app)
+
+
+// HELPER functions
+const getSnapshots = async (col, arr) => {
+    const fetchPromises = []
+    arr.forEach((id) => {
+        const nextPromise = db.collection(col)
+            .doc(id)
+            .get()
+
+        fetchPromises.push(nextPromise)
+    })
+    return await Promise.all(fetchPromises)
+}
+
+const getCompanies = async (companyIds) => {
+    const snapshots = await getSnapshots('companies', companyIds)
     const data = snapshots.map(snapshot => {
-        const { dateEst, name } = snapshot.data();
+        const { dateEst, name } = snapshot.data()
         return {
             id: snapshot.id,
             name,
             dateEst: (dateEst) ? dateEst.toDate() : dateEst
         }
-    });
-
-    return data;
+    })
+    return data
 }
 
-const getSurveys = async (surveys) => {
-    const fetchPromises = [];
-    surveys.forEach((surveyId) => {
-        const nextPromise = firestore
-            .doc(`surveys/${surveyId}`)
-            .get();
-
-        fetchPromises.push(nextPromise);
-    });
-
-    const snapshots = await Promise.all(fetchPromises);
+const getSurveys = async (surveyIds) => {
+    const snapshots = await getSnapshots('surveys', surveyIds)
     const data = snapshots.map(snapshot => {
-        const { dateTaken, title, ...survey } = snapshot.data();
+        const { dateTaken, title, ...survey } = snapshot.data()
         return {
             id: snapshot.id,
             title,
             survey,
             dateTaken: (dateTaken) ? dateTaken.toDate() : dateTaken,
         }
-    });
-
-    return data;
+    })
+    return data
 }
+
+
 /*const { default: next } = require('next');
 
 const isDev = process.env.NODE_ENV !== 'production';
